@@ -204,7 +204,7 @@ function fitStrip(){lmap.invalidateSize();lmap.fitBounds([[LAT.g+0.0002,LON.w-0.
 function setMode(on){
   if(on&&!lmap){modeBtn.disabled=true;modeBtn.textContent='Loading...';
     loadLeaflet().then(()=>{buildMap();modeBtn.disabled=false;setMode(true);})
-      .catch(()=>{modeBtn.disabled=false;modeBtn.textContent='Street map';legend.textContent='The street map could not load. Check your connection and try again.';});return;}
+      .catch(()=>{modeBtn.disabled=false;modeBtn.textContent='Street map';svg.removeAttribute('hidden');lmapEl.hidden=true;legend.textContent='The street map could not load. Check your connection and try again.';});return;}
   real=on;const h=svg.getBoundingClientRect().height;
   svg.toggleAttribute('hidden',on);lmapEl.hidden=!on;if(on&&h&&!phoneMQ.matches)lmapEl.style.height=h+'px';
   modeBtn.textContent=on?'Schematic':'Street map';modeBtn.setAttribute('aria-pressed',on);
@@ -213,6 +213,8 @@ function setMode(on){
 let lastHi=-1;function cur0(){return lastHi;}
 modeBtn.onclick=()=>setMode(!real);
 layoutSchematic();phoneMQ.addEventListener('change',layoutSchematic);
+// Street map is the default view; the schematic is one tap away
+svg.setAttribute('hidden','');lmapEl.hidden=false;setMode(true);
 const hiSvg=hi;hi=function(i){lastHi=i;hiSvg(i);lmarkers.forEach((m,j)=>{const e=m.getElement();if(e)e.classList.toggle('on',j===i);});};
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();
   if(real&&lmarkers[si]){lmapEl.scrollIntoView({block:'nearest'});lmap.panTo(lmarkers[si].getLatLng());hi(si);lmarkers[si].getElement()?.focus({preventScroll:true});return;}
