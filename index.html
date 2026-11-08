@@ -51,6 +51,7 @@ svg text{font-family:var(--serif);fill:var(--fg)}
 .lb .cap{color:#eee;text-align:center;font-size:1.05rem}
 .lb .cap small{display:block;color:#aaa}
 .lb button{font-family:var(--serif);font-size:1rem;background:#2b2f2d;color:#fff;border:1px solid #555;border-radius:4px;padding:6px 14px;cursor:pointer}
+.lb button.x{font-size:1.5rem;line-height:1;width:44px;height:44px;padding:0;border-radius:22px;flex:none}
 .lb button:focus-visible{outline:2px solid #fff}
 .nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
 /* Map toggle: schematic (default) or a real street map in the same strip */
@@ -65,9 +66,25 @@ svg text{font-family:var(--serif);fill:var(--fg)}
 .lpk{display:flex!important;align-items:center;justify-content:center;width:18px!important;height:18px!important;margin:-9px 0 0 -9px!important;border-radius:3px;background:#1f5fbf;border:1.5px solid #fff;color:#fff;font:700 13px -apple-system,Helvetica,Arial,sans-serif}
 footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
 @media (max-width:760px){
-  .wrap{grid-template-columns:minmax(0,1fr)}
-  .mapbox{position:relative;top:0}
-  svg{max-height:none}
+  /* Phone: the map stays pinned as a narrow strip on the left while photos scroll beside it */
+  body{padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  h1{font-size:1.6rem}
+  .wrap{grid-template-columns:104px minmax(0,1fr);gap:8px}
+  .mapbox{position:sticky;top:calc(env(safe-area-inset-top,0px) + 6px);height:calc(100dvh - env(safe-area-inset-top,0px) - 12px);padding:4px;display:flex;flex-direction:column}
+  .maphead{margin:0 0 4px}
+  .maphead h2,.legend{display:none}
+  .mapbtn{width:100%;font-size:.78rem;padding:4px 2px}
+  svg{flex:1;min-height:0;height:100%;max-height:none}
+  #lmap{flex:1;min-height:0;height:auto!important;aspect-ratio:auto;max-height:none}
+  .mk circle{r:12}.mk:hover circle,.mk.on circle{r:14}
+  .mk text.n{font-size:13px}
+  .stl{font-size:15px}
+  .stop{padding:10px;margin-bottom:10px}
+  .stop h3{font-size:1.05rem;gap:6px}
+  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+  .leaflet-control-attribution{font-size:8px!important;line-height:1.2!important;max-width:100%;white-space:normal}
+  .leaflet-control-layers-toggle{width:30px!important;height:30px!important;background-size:20px!important}
+  .leaflet-touch .leaflet-bar a{width:26px!important;height:26px!important;line-height:26px!important}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -85,7 +102,7 @@ footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
 <footer>Photos by Travis Smith, Nov 2026. Order and stop placement read from street signs and storefronts in the photos (the uploads had no GPS data), so mid-block positions are approximate. Layout by Claude.</footer>
 
 <div class="lb" id="lb" hidden>
-  <div class="top"><span id="lbstop"></span><button id="close" type="button">Close</button></div>
+  <div class="top"><span id="lbstop"></span><button id="close" class="x" type="button" aria-label="Close" title="Close">&#10005;</button></div>
   <div class="img"><img id="lbimg" alt=""></div>
   <div class="cap" id="lbcap"></div>
   <div class="nav"><button id="prev" type="button">&#8592; North</button><button id="map2" type="button">Show on map</button><button id="next" type="button">South &#8594;</button></div>
@@ -100,7 +117,7 @@ document.getElementById('nstops').textContent=STOPS.length;
 const NS='http://www.w3.org/2000/svg',svg=document.getElementById('map');
 const el=(t,a,p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
 const cx=150;
-streets.forEach(([n,y])=>{el('rect',{x:70,y:y-7,width:160,height:14,fill:'var(--asphalt)',opacity:.55});const t=el('text',{x:4,y:y+4,'font-size':13});t.textContent=n;});
+streets.forEach(([n,y])=>{el('rect',{x:70,y:y-7,width:160,height:14,fill:'var(--asphalt)',opacity:.55});const t=el('text',{x:4,y:y+4,'font-size':13,class:'stl'});t.textContent=n;});
 el('rect',{x:cx-34,y:10,width:68,height:975,fill:'var(--asphalt)',rx:4});
 el('rect',{x:cx-6,y:10,width:12,height:975,fill:'var(--median)'});
 streets.forEach(([n,y])=>{for(let i=0;i<5;i++)el('rect',{x:cx-30+i*13,y:y-6,width:6,height:12,fill:'var(--stripe)',opacity:.8});});
@@ -149,6 +166,13 @@ document.getElementById('next').onclick=()=>open(cur+1);
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
 lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('img'))close();});
 document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')open(cur+1);if(e.key==='ArrowLeft')open(cur-1);});
+// Phone layout for the schematic: crop to the road, labels sit on the cross streets
+const phoneMQ=matchMedia('(max-width:760px)');
+function layoutSchematic(){const ph=phoneMQ.matches;
+  svg.setAttribute('viewBox',ph?'66 0 168 1000':'0 0 260 1000');
+  svg.querySelectorAll('text.stl').forEach((t,k)=>{const y=streets[k][1];
+    if(ph){t.setAttribute('x',72);t.setAttribute('y',y-10);}else{t.setAttribute('x',4);t.setAttribute('y',y+4);}});
+  if(lmap)fitStrip();}
 // Real street map, loaded the first time it is switched on
 const LAT={g:34.070649,f:34.069444,e:34.068223,d:34.067014,c:34.065803,b:34.064591,holt:34.063365,transit:34.06266};
 const knots=[[40,LAT.g],[150,LAT.f],[260,LAT.e],[370,LAT.d],[525,LAT.c],[650,LAT.b],[820,LAT.holt],[940,LAT.transit]];
@@ -161,7 +185,7 @@ function loadLeaflet(){return new Promise((res,rej)=>{if(window.L)return res();
   const c=document.createElement('link');c.rel='stylesheet';c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(c);
   const j=document.createElement('script');j.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';j.onload=res;j.onerror=rej;document.head.appendChild(j);});}
 function buildMap(){
-  lmap=L.map(lmapEl,{zoomSnap:.25,scrollWheelZoom:false,attributionControl:true,dragging:!L.Browser.mobile});
+  lmap=L.map(lmapEl,{zoomSnap:.25,scrollWheelZoom:false,attributionControl:true,dragging:true});
   const street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
   const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
   street.addTo(lmap);L.control.layers({'Street':street,'Satellite':sat},null,{position:'topright'}).addTo(lmap);
@@ -178,12 +202,13 @@ function setMode(on){
     loadLeaflet().then(()=>{buildMap();modeBtn.disabled=false;setMode(true);})
       .catch(()=>{modeBtn.disabled=false;modeBtn.textContent='Street map';legend.textContent='The street map could not load. Check your connection and try again.';});return;}
   real=on;const h=svg.getBoundingClientRect().height;
-  svg.toggleAttribute('hidden',on);lmapEl.hidden=!on;if(on&&h)lmapEl.style.height=h+'px';
+  svg.toggleAttribute('hidden',on);lmapEl.hidden=!on;if(on&&h&&!phoneMQ.matches)lmapEl.style.height=h+'px';
   modeBtn.textContent=on?'Schematic':'Street map';modeBtn.setAttribute('aria-pressed',on);
   legend.innerHTML=on?'Street map, north at top. Marker positions are approximate, placed from the street signs in the photos. Blue P is where I parked. Use the corner button for satellite view.':legendSchem;
   if(on)fitStrip();hi(cur0());}
 let lastHi=-1;function cur0(){return lastHi;}
 modeBtn.onclick=()=>setMode(!real);
+layoutSchematic();phoneMQ.addEventListener('change',layoutSchematic);
 const hiSvg=hi;hi=function(i){lastHi=i;hiSvg(i);lmarkers.forEach((m,j)=>{const e=m.getElement();if(e)e.classList.toggle('on',j===i);});};
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();
   if(real&&lmarkers[si]){lmapEl.scrollIntoView({block:'nearest'});lmap.panTo(lmarkers[si].getLatLng());hi(si);lmarkers[si].getElement()?.focus({preventScroll:true});return;}
