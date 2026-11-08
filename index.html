@@ -118,7 +118,7 @@ STOPS.forEach((s,i)=>{
 });
 function hi(i){markers.forEach((m,j)=>m.classList.toggle('on',j===i));}
 function jump(i){const sec=document.getElementById('s-'+STOPS[i].id);sec.scrollIntoView({behavior:'smooth',block:'start'});
-  sec.classList.add('flash');setTimeout(()=>sec.classList.remove('flash'),1200);hi(i);open(all.findIndex(p=>p.si===i));}
+  sec.classList.add('flash');setTimeout(()=>sec.classList.remove('flash'),1200);hi(i);}
 const lb=document.getElementById('lb'),img=document.getElementById('lbimg');let cur=0;
 function open(k){cur=(k+all.length)%all.length;const p=all[cur],s=STOPS[p.si];
   img.src='photos/'+p.f;img.alt=p.cap;
