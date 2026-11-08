@@ -1,0 +1,139 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Euclid Avenue Photo Walk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a schematic strip of Euclid (north at top) beside the stop-by-stop photo log */
+:root{
+  --bg:#f3f1ec; --panel:#fbfaf7; --fg:#1f2421; --muted:#5f665f; --rule:#d9d5cb;
+  --asphalt:#3b3f3d; --median:#6f8f5a; --curb:#b23a2e; --stripe:#ffffff;
+  --serif:"Times New Roman",Times,"Liberation Serif",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171a18; --panel:#1f2320; --fg:#ecebe6; --muted:#a3a99f; --rule:#343a35;
+  --asphalt:#4a504c; --median:#7fa36a; --curb:#e0675a; --stripe:#e9e9e4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171a18; --panel:#1f2320; --fg:#ecebe6; --muted:#a3a99f; --rule:#343a35;
+  --asphalt:#4a504c; --median:#7fa36a; --curb:#e0675a; --stripe:#e9e9e4; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--serif);font-size:17px;line-height:1.45;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+header{max-width:1180px;margin:0 auto 20px}
+h1{font-size:2.1rem;margin:0;text-wrap:balance;font-weight:700}
+.sub{color:var(--muted);margin:.25rem 0 0}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:28px;align-items:start}
+.mapbox{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:12px}
+.mapbox h2{font-size:1rem;margin:0 0 6px;font-style:italic;font-weight:400;color:var(--muted)}
+svg{display:block;width:100%;height:auto;max-height:calc(100vh - 120px)}
+svg text{font-family:var(--serif);fill:var(--fg)}
+.mk{cursor:pointer}
+.mk circle{fill:var(--curb);stroke:var(--panel);stroke-width:2;transition:r .15s}
+.mk text.n{fill:#fff;font-size:11px;font-weight:700;pointer-events:none}
+.mk:hover circle,.mk.on circle{r:11}
+.mk:focus{outline:none}.mk:focus-visible circle{stroke:var(--fg);stroke-width:3}
+.legend{font-size:.82rem;color:var(--muted);margin-top:6px}
+.stop{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin-bottom:16px;scroll-margin-top:16px}
+.stop.flash{outline:3px solid var(--curb)}
+.stop h3{margin:0;font-size:1.25rem;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:13px;background:var(--curb);color:#fff;font-size:.85rem;font-weight:700;padding:0 6px}
+.side{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.note{margin:.3rem 0 .7rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.ph{all:unset;cursor:pointer;display:block;position:relative;border-radius:4px;overflow:hidden;aspect-ratio:4/3;background:var(--rule)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph span{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.65);color:#fff;font-size:.75rem;padding:1px 6px;border-radius:3px;font-variant-numeric:tabular-nums}
+.ph:focus-visible{outline:3px solid var(--curb)}
+.lb{position:fixed;inset:0;background:rgba(10,12,11,.94);z-index:50;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) max(12px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(12px,env(safe-area-inset-left,0px))}
+.lb .top{display:flex;justify-content:space-between;align-items:center;color:#eee;gap:12px}
+.lb .img{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 0}
+.lb img{max-width:100%;max-height:100%;object-fit:contain}
+.lb .cap{color:#eee;text-align:center;font-size:1.05rem}
+.lb .cap small{display:block;color:#aaa}
+.lb button{font-family:var(--serif);font-size:1rem;background:#2b2f2d;color:#fff;border:1px solid #555;border-radius:4px;padding:6px 14px;cursor:pointer}
+.lb button:focus-visible{outline:2px solid #fff}
+.nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
+footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
+@media (max-width:760px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .mapbox{position:relative;top:0}
+  svg{max-height:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<header>
+  <h1>Euclid Avenue Photo Walk</h1>
+  <p class="sub">Downtown Ontario, CA. G Street south to Transit Street, <span id="count"></span> photos at <span id="nstops"></span> stops. Tap a marker to jump to its photos; tap a photo to open it.</p>
+</header>
+<div class="wrap">
+  <aside class="mapbox"><h2>Euclid Ave, north at top</h2><svg id="map" viewBox="0 0 260 1000" role="img" aria-label="Schematic map of Euclid Avenue with photo stops"></svg>
+  <div class="legend">Schematic, not to scale. Markers left of the median are the west side, right is the east side, on the median are median features.</div></aside>
+  <main id="list"></main>
+</div>
+<footer>Photos by Travis Smith, Nov 2026. Order and stop placement read from street signs and storefronts in the photos (the uploads had no GPS data), so mid-block positions are approximate. Layout by Claude.</footer>
+
+<div class="lb" id="lb" hidden>
+  <div class="top"><span id="lbstop"></span><button id="close" type="button">Close</button></div>
+  <div class="img"><img id="lbimg" alt=""></div>
+  <div class="cap" id="lbcap"></div>
+  <div class="nav"><button id="prev" type="button">&#8592; North</button><button id="map2" type="button">Show on map</button><button id="next" type="button">South &#8594;</button></div>
+</div>
+
+<script>
+const STOPS=[{"id": "g", "name": "G Street", "y": 40, "side": "x", "note": "North end of the walk. Christmas on Euclid ornament in the median.", "photos": [{"n": 1, "f": "01.jpg", "cap": "G St 100 W sign, looking east across Euclid", "w": 1400, "h": 1050}, {"n": 2, "f": "02.jpg", "cap": "G St crosswalk, mountains to the north", "w": 1400, "h": 1050}, {"n": 3, "f": "03.jpg", "cap": "G St intersection, Mission store on the corner", "w": 1400, "h": 1050}, {"n": 4, "f": "04.jpg", "cap": "G St crosswalk, second angle", "w": 1400, "h": 1050}, {"n": 5, "f": "05.jpg", "cap": "G St crosswalk, third angle", "w": 1400, "h": 1050}, {"n": 6, "f": "06.jpg", "cap": "Christmas on Euclid median ornament", "w": 1050, "h": 1400}]}, {"id": "f", "name": "F Street", "y": 150, "side": "x", "note": "Downtown Ontario banners begin; stone church on the corner.", "photos": [{"n": 7, "f": "07.jpg", "cap": "F Street sign and Downtown Ontario banners", "w": 1400, "h": 1050}, {"n": 8, "f": "08.jpg", "cap": "F St crossing with the stone church", "w": 1400, "h": 1050}]}, {"id": "fe", "name": "Storefront row, F to E", "y": 205, "side": "w", "note": "Lavish Oak Beauty Studios and neighbors.", "photos": [{"n": 9, "f": "09.jpg", "cap": "Lavish Oak Beauty Studios storefront", "w": 1400, "h": 1050}, {"n": 10, "f": "10.jpg", "cap": "Sidewalk along the storefront row", "w": 1400, "h": 1050}]}, {"id": "e", "name": "E Street", "y": 260, "side": "x", "note": "Unicare on the corner; Arco and Chevron across the median.", "photos": [{"n": 11, "f": "11.jpg", "cap": "E St crossing, Starbucks and Chevron", "w": 1400, "h": 1050}, {"n": 12, "f": "12.jpg", "cap": "E Street sign, Unicare on the corner", "w": 1400, "h": 1050}, {"n": 13, "f": "13.jpg", "cap": "Arco across Euclid, lead-testing banner", "w": 1400, "h": 1050}, {"n": 14, "f": "14.jpg", "cap": "Euclid Ave sign and county lead banner", "w": 1400, "h": 1050}]}, {"id": "doia", "name": "425 N Euclid, DOIA office", "y": 298, "side": "w", "note": "Downtown Ontario Improvement Association: window maps, historic sign, committee agendas.", "photos": [{"n": 15, "f": "15.jpg", "cap": "DOIA storefront, 425 N Euclid", "w": 1050, "h": 1400}, {"n": 16, "f": "16.jpg", "cap": "Window board: agendas, Discover poster, parking map", "w": 1050, "h": 1400}, {"n": 17, "f": "17.jpg", "cap": "Committee agendas posted for Nov 12, 2026", "w": 1050, "h": 1400}, {"n": 18, "f": "18.jpg", "cap": "Discover Downtown Ontario business map", "w": 1050, "h": 1400}, {"n": 19, "f": "19.jpg", "cap": "History timeline inside the office", "w": 1050, "h": 1400}, {"n": 20, "f": "20.jpg", "cap": "Historic Downtown Ontario sign on easel", "w": 1050, "h": 1400}, {"n": 21, "f": "21.jpg", "cap": "Historic sign: landmark key", "w": 1050, "h": 1400}, {"n": 22, "f": "22.jpg", "cap": "Historic sign: numbered landmark map", "w": 1050, "h": 1400}]}, {"id": "417", "name": "417 N Euclid, Optometrist", "y": 322, "side": "w", "note": "", "photos": [{"n": 23, "f": "23.jpg", "cap": "Optometrist at 417, looking north", "w": 1400, "h": 1050}]}, {"id": "415", "name": "415 N Euclid, Barbershop", "y": 346, "side": "w", "note": "Rosa's Flowers next door.", "photos": [{"n": 24, "f": "24.jpg", "cap": "Ontario's Hometown Barbershop and flowers", "w": 1400, "h": 1050}]}, {"id": "d", "name": "D Street", "y": 370, "side": "x", "note": "Harvest display on the corner; U.S. Bank and new apartments across.", "photos": [{"n": 25, "f": "25.jpg", "cap": "D Street sign, looking down Euclid", "w": 1050, "h": 1400}, {"n": 26, "f": "26.jpg", "cap": "Scarecrow display at D St", "w": 1400, "h": 1050}, {"n": 27, "f": "27.jpg", "cap": "D St corner, wide view", "w": 1400, "h": 1050}, {"n": 28, "f": "28.jpg", "cap": "D St crossing, mountains to the north", "w": 1400, "h": 1050}, {"n": 29, "f": "29.jpg", "cap": "D Street 100 E sign, 320 N Euclid apartments", "w": 1400, "h": 1050}]}, {"id": "deast", "name": "320 N Euclid and the lot, east side", "y": 415, "side": "e", "note": "New four-story apartments, then a surface parking lot and the Omnitrans 83 stop.", "photos": [{"n": 30, "f": "30.jpg", "cap": "Apartments and DOIA scarecrow display", "w": 1050, "h": 1400}, {"n": 31, "f": "31.jpg", "cap": "Apartment frontage, 2-hour parking, looking north", "w": 1050, "h": 1400}, {"n": 32, "f": "32.jpg", "cap": "Surface parking lot, mountains beyond", "w": 1400, "h": 1050}, {"n": 33, "f": "33.jpg", "cap": "Omnitrans 83 stop beside the lot, looking north", "w": 1400, "h": 1050}, {"n": 34, "f": "34.jpg", "cap": "Across the median toward U.S. Bank", "w": 1400, "h": 1050}]}, {"id": "gift", "name": "Gift box in the median", "y": 455, "side": "m", "note": "Holiday gift box across from Strum Brewing (311 N Euclid).", "photos": [{"n": 35, "f": "35.jpg", "cap": "Gift box display, Strum Brewing across", "w": 1050, "h": 1400}]}, {"id": "band", "name": "Bandstand and WCTU Fountain", "y": 490, "side": "m", "note": "R. Jack Mercer Ontario Community Bandstand (1997) and the 1908 WCTU fountain, in the median just north of C Street.", "photos": [{"n": 36, "f": "36.jpg", "cap": "Bandstand from the street", "w": 1050, "h": 1400}, {"n": 37, "f": "37.jpg", "cap": "Bandstand, front steps", "w": 1400, "h": 1050}, {"n": 38, "f": "38.jpg", "cap": "Bandstand, wide view", "w": 1400, "h": 1050}, {"n": 39, "f": "39.jpg", "cap": "Bandstand ceiling and holiday garland", "w": 1050, "h": 1400}, {"n": 40, "f": "40.jpg", "cap": "Bandstand ramp, C Street beyond", "w": 1400, "h": 1050}, {"n": 41, "f": "41.jpg", "cap": "Bandstand from the south", "w": 1400, "h": 1050}, {"n": 42, "f": "42.jpg", "cap": "Ontario Bandstand plaque, dedicated Oct 19, 1997", "w": 1050, "h": 1400}, {"n": 43, "f": "43.jpg", "cap": "Donor bricks on the bandstand walk", "w": 1050, "h": 1400}, {"n": 44, "f": "44.jpg", "cap": "Euclid Avenue Nativity Display plaque, 1959", "w": 1400, "h": 1050}, {"n": 45, "f": "45.jpg", "cap": "WCTU fountain, 1908, and Euclid Ave plaque", "w": 1050, "h": 1400}, {"n": 46, "f": "46.jpg", "cap": "WCTU fountain plaque", "w": 1050, "h": 1400}, {"n": 47, "f": "47.jpg", "cap": "Euclid Ave horsecar sidewalk plaque", "w": 1050, "h": 1400}]}, {"id": "c", "name": "C Street and Granada Theatre", "y": 525, "side": "x", "note": "Wells Fargo across the intersection; Granada Theatre on the corner.", "photos": [{"n": 48, "f": "48.jpg", "cap": "C Street sign, Wells Fargo across Euclid", "w": 1400, "h": 1050}, {"n": 49, "f": "49.jpg", "cap": "C St crossing, Granada Theatre and mountains", "w": 1400, "h": 1050}, {"n": 50, "f": "50.jpg", "cap": "Granada Theatre, \"Hello Ontario\" marquee", "w": 1400, "h": 1050}]}, {"id": "231", "name": "231 N Euclid, Unique Cafe", "y": 555, "side": "w", "note": "", "photos": [{"n": 51, "f": "51.jpg", "cap": "Unique Cafe, \"under new management\"", "w": 1050, "h": 1400}, {"n": 52, "f": "52.jpg", "cap": "Sidewalk south past The Golden Web boutique", "w": 1400, "h": 1050}]}, {"id": "town", "name": "Ontario Town Square, 224 N Euclid", "y": 565, "side": "e", "note": "City plaza with the clock tower; posted special events calendar.", "photos": [{"n": 53, "f": "53.jpg", "cap": "224 N Euclid Avenue sign and roses", "w": 1050, "h": 1400}, {"n": 54, "f": "54.jpg", "cap": "Town Square entrance, clock tower ahead", "w": 1400, "h": 1050}, {"n": 55, "f": "55.jpg", "cap": "Special Events calendar, Sept to Dec 2026", "w": 1050, "h": 1400}, {"n": 56, "f": "56.jpg", "cap": "Palm court and benches", "w": 1400, "h": 1050}]}, {"id": "herr", "name": "Herradura de Oro", "y": 578, "side": "w", "note": "Western wear, between the cafe and Newsboy.", "photos": [{"n": 57, "f": "57.jpg", "cap": "Herradura de Oro Western Wear", "w": 1400, "h": 1050}]}, {"id": "215", "name": "215 N Euclid, Newsboy Books", "y": 600, "side": "w", "note": "", "photos": [{"n": 58, "f": "58.jpg", "cap": "Newsboy Books storefront", "w": 1400, "h": 1050}, {"n": 59, "f": "59.jpg", "cap": "Newsboy Books, dentistry next door", "w": 1400, "h": 1050}]}, {"id": "203", "name": "203 N Euclid, Furniture building", "y": 622, "side": "w", "note": "Vacant storefront, partly boarded.", "photos": [{"n": 60, "f": "60.jpg", "cap": "Furniture building facade", "w": 1400, "h": 1050}, {"n": 61, "f": "61.jpg", "cap": "203 N Euclid, sidewalk looking north", "w": 1400, "h": 1050}]}, {"id": "b", "name": "B Street", "y": 650, "side": "x", "note": "Tiger mural building and the mule car pavilion across the intersection.", "photos": [{"n": 62, "f": "62.jpg", "cap": "B St crossing, tiger mural and pavilion", "w": 1400, "h": 1050}, {"n": 63, "f": "63.jpg", "cap": "B Street 100 W sign", "w": 1400, "h": 1050}, {"n": 64, "f": "64.jpg", "cap": "B St crossing looking north, mountains", "w": 1400, "h": 1050}, {"n": 65, "f": "65.jpg", "cap": "Looking west down B Street", "w": 1050, "h": 1400}, {"n": 66, "f": "66.jpg", "cap": "B Street 100 E, Furniture building across", "w": 1400, "h": 1050}]}, {"id": "mule", "name": "Mule Car Pavilion", "y": 672, "side": "m", "note": "Ontario & San Antonio Heights R.R. Co. car No. 1 and its mule, 1888 to 1895, with memorial plaques.", "photos": [{"n": 67, "f": "67.jpg", "cap": "Mule car pavilion, wide view", "w": 1400, "h": 1050}, {"n": 68, "f": "68.jpg", "cap": "\"Ontario & San Antonio Heights R.R. Co.\" lettering", "w": 1400, "h": 1050}, {"n": 69, "f": "69.jpg", "cap": "Mule hitched to the car", "w": 1050, "h": 1400}, {"n": 70, "f": "70.jpg", "cap": "Mule, close up", "w": 1050, "h": 1400}, {"n": 71, "f": "71.jpg", "cap": "Car interior: vintage ad cards", "w": 1050, "h": 1400}, {"n": 72, "f": "72.jpg", "cap": "Car interior: Chaffey College card, B Street beyond", "w": 1050, "h": 1400}, {"n": 73, "f": "73.jpg", "cap": "Mule Car 1888-1895 history sign", "w": 1050, "h": 1400}, {"n": 74, "f": "74.jpg", "cap": "Mule Car history sign, full text", "w": 1050, "h": 1400}, {"n": 75, "f": "75.jpg", "cap": "Mule Car 1888 to 1895 monument stone", "w": 1050, "h": 1400}, {"n": 76, "f": "76.jpg", "cap": "Row of memorial plaques", "w": 1050, "h": 1400}, {"n": 77, "f": "77.jpg", "cap": "Memorial plaque", "w": 1050, "h": 1400}, {"n": 78, "f": "78.jpg", "cap": "Memorial plaque, 1977", "w": 1050, "h": 1400}, {"n": 79, "f": "79.jpg", "cap": "Memorial plaque", "w": 1050, "h": 1400}]}, {"id": "tiger", "name": "Tiger mural", "y": 695, "side": "e", "note": "Boy, tiger and magpies on a red wall, beside a cleared lot (signed SDG).", "photos": [{"n": 80, "f": "80.jpg", "cap": "Corner at B St, tiger wall on the left", "w": 1400, "h": 1050}, {"n": 81, "f": "81.jpg", "cap": "Tiger mural, close", "w": 1400, "h": 1050}, {"n": 82, "f": "82.jpg", "cap": "Tiger mural from the lot, ornament down the median", "w": 1400, "h": 1050}]}, {"id": "dto", "name": "DTO garden lot", "y": 730, "side": "e", "note": "Fenced garden with DTO letters and monarch, papel picado over the lot, painted \"Oliver Plows\" brick wall.", "photos": [{"n": 83, "f": "83.jpg", "cap": "DTO letters and monarch butterfly", "w": 1400, "h": 1050}, {"n": 84, "f": "84.jpg", "cap": "Lot between the brick walls, papel picado", "w": 1400, "h": 1050}, {"n": 85, "f": "85.jpg", "cap": "Same lot, second angle", "w": 1400, "h": 1050}]}, {"id": "orn", "name": "Ornament in the median", "y": 765, "side": "m", "note": "Christmas on Euclid Experience ornament, \"Cocktails\" sign across.", "photos": [{"n": 86, "f": "86.jpg", "cap": "Christmas on Euclid ornament, est. 1958", "w": 1050, "h": 1400}]}, {"id": "holt", "name": "Holt Boulevard", "y": 820, "side": "x", "note": "Big intersection: T-Mobile and murals on the corners, BRT construction barriers, West Valley Connector sign.", "photos": [{"n": 87, "f": "87.jpg", "cap": "Looking north across Holt, T-Mobile on the right", "w": 1400, "h": 1050}, {"n": 88, "f": "88.jpg", "cap": "Holt crossing, mural building and mountains", "w": 1400, "h": 1050}, {"n": 89, "f": "89.jpg", "cap": "Holt crossing, T-Mobile and mural corner", "w": 1400, "h": 1050}, {"n": 90, "f": "90.jpg", "cap": "Holt corner, Euclid Ave sign and barriers", "w": 1400, "h": 1050}, {"n": 91, "f": "91.jpg", "cap": "Baseball and P-38 mural, Omnitrans BRT sign", "w": 1400, "h": 1050}]}, {"id": "museum", "name": "Transit St, Ontario Museum", "y": 940, "side": "x", "note": "Ontario Museum of History & Art, 225 S Euclid. Dia de los Muertos banner. South end of the walk.", "photos": [{"n": 92, "f": "92.jpg", "cap": "Transit St 100 E sign, museum across", "w": 1400, "h": 1050}, {"n": 93, "f": "93.jpg", "cap": "Ontario Museum of History & Art sign", "w": 1400, "h": 1050}, {"n": 94, "f": "94.jpg", "cap": "Museum sign and Dia de los Muertos banner", "w": 1400, "h": 1050}]}];
+const streets=[["G St",40],["F St",150],["E St",260],["D St",370],["C St",525],["B St",650],["Holt Blvd",820],["Transit St",940]];
+const all=[];STOPS.forEach((s,si)=>s.photos.forEach(p=>all.push({...p,si})));
+document.getElementById('count').textContent=all.length;
+document.getElementById('nstops').textContent=STOPS.length;
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('map');
+const el=(t,a,p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+const cx=150;
+streets.forEach(([n,y])=>{el('rect',{x:70,y:y-7,width:160,height:14,fill:'var(--asphalt)',opacity:.55});const t=el('text',{x:4,y:y+4,'font-size':13});t.textContent=n;});
+el('rect',{x:cx-34,y:10,width:68,height:975,fill:'var(--asphalt)',rx:4});
+el('rect',{x:cx-6,y:10,width:12,height:975,fill:'var(--median)'});
+streets.forEach(([n,y])=>{for(let i=0;i<5;i++)el('rect',{x:cx-30+i*13,y:y-6,width:6,height:12,fill:'var(--stripe)',opacity:.8});});
+const t1=el('text',{x:cx,y:8,'text-anchor':'middle','font-size':11});t1.textContent='N';
+const xs={w:cx-50,x:cx-48,m:cx,e:cx+50};
+const markers=[];
+STOPS.forEach((s,i)=>{
+  const g=el('g',{class:'mk',tabindex:0,role:'button','aria-label':s.name+', '+s.photos.length+' photos'});
+  let x=xs[s.side]; if(s.side==='w'&&(i%2))x-=0; 
+  el('circle',{cx:x,cy:s.y,r:9},g);
+  const t=el('text',{x:x,y:s.y+4,'text-anchor':'middle',class:'n'},g);t.textContent=i+1;
+  const ti=el('title',{},g);ti.textContent=(i+1)+'. '+s.name;
+  const go=()=>jump(i);g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  markers.push(g);
+});
+const sideName={w:'West side',e:'East side',m:'Median',x:'Intersection'};
+const list=document.getElementById('list');
+STOPS.forEach((s,i)=>{
+  const sec=document.createElement('section');sec.className='stop';sec.id='s-'+s.id;
+  sec.innerHTML=`<h3><span class="badge">${i+1}</span>${s.name}<span class="side">${sideName[s.side]}</span></h3>`+(s.note?`<p class="note">${s.note}</p>`:'<p class="note"></p>');
+  const gr=document.createElement('div');gr.className='grid';
+  s.photos.forEach(p=>{const b=document.createElement('button');b.className='ph';b.type='button';b.setAttribute('aria-label','Photo '+p.n+': '+p.cap);
+    b.innerHTML=`<img loading="lazy" src="thumbs/${p.f}" alt=""><span>${p.n}</span>`;b.onclick=()=>open(p.n-1);
+    b.onmouseenter=()=>hi(i);b.onmouseleave=()=>hi(-1);gr.appendChild(b);});
+  sec.appendChild(gr);list.appendChild(sec);
+});
+function hi(i){markers.forEach((m,j)=>m.classList.toggle('on',j===i));}
+function jump(i){const sec=document.getElementById('s-'+STOPS[i].id);sec.scrollIntoView({behavior:'smooth',block:'start'});
+  sec.classList.add('flash');setTimeout(()=>sec.classList.remove('flash'),1200);hi(i);open(all.findIndex(p=>p.si===i));}
+const lb=document.getElementById('lb'),img=document.getElementById('lbimg');let cur=0;
+function open(k){cur=(k+all.length)%all.length;const p=all[cur],s=STOPS[p.si];
+  img.src='photos/'+p.f;img.alt=p.cap;
+  document.getElementById('lbstop').textContent=`Stop ${p.si+1}: ${s.name}`;
+  document.getElementById('lbcap').innerHTML=`${p.cap}<small>Photo ${p.n} of ${all.length}</small>`;
+  lb.hidden=false;hi(p.si);if(all[cur+1]){const pre=new Image();pre.src='photos/'+all[cur+1].f;}}
+function close(){lb.hidden=true;}
+document.getElementById('close').onclick=close;
+document.getElementById('prev').onclick=()=>open(cur-1);
+document.getElementById('next').onclick=()=>open(cur+1);
+document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
+lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('img'))close();});
+document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')open(cur+1);if(e.key==='ArrowLeft')open(cur-1);});
+let tx=null;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+lb.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)open(cur+(dx<0?1:-1));tx=null;});
+</script>
+
+</body></html>
