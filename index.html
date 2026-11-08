@@ -53,6 +53,16 @@ svg text{font-family:var(--serif);fill:var(--fg)}
 .lb button{font-family:var(--serif);font-size:1rem;background:#2b2f2d;color:#fff;border:1px solid #555;border-radius:4px;padding:6px 14px;cursor:pointer}
 .lb button:focus-visible{outline:2px solid #fff}
 .nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
+/* Map toggle: schematic (default) or a real street map in the same strip */
+.maphead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 6px}
+.maphead h2{margin:0}
+.mapbtn{font-family:var(--serif);font-size:.85rem;background:var(--bg);color:var(--fg);border:1px solid var(--rule);border-radius:4px;padding:3px 9px;cursor:pointer;white-space:nowrap}
+.mapbtn:hover{border-color:var(--muted)}
+.mapbtn:focus-visible{outline:2px solid var(--curb)}
+#lmap{width:100%;aspect-ratio:260/1000;max-height:calc(100vh - 120px);border-radius:4px;background:var(--rule)}
+.lmk{display:flex!important;align-items:center;justify-content:center;width:20px!important;height:20px!important;margin:-10px 0 0 -10px!important;border-radius:50%;background:var(--curb);border:2px solid #fff;color:#fff;font:700 11px -apple-system,Helvetica,Arial,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .15s}
+.lmk.on{transform:scale(1.3);z-index:1000!important}
+.lpk{display:flex!important;align-items:center;justify-content:center;width:18px!important;height:18px!important;margin:-9px 0 0 -9px!important;border-radius:3px;background:#1f5fbf;border:1.5px solid #fff;color:#fff;font:700 13px -apple-system,Helvetica,Arial,sans-serif}
 footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
 @media (max-width:760px){
   .wrap{grid-template-columns:minmax(0,1fr)}
@@ -67,8 +77,9 @@ footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
   <p class="sub">Downtown Ontario, CA. G Street south to Transit Street, <span id="count"></span> photos at <span id="nstops"></span> stops. Tap a marker to jump to its photos; tap a photo to open it.</p>
 </header>
 <div class="wrap">
-  <aside class="mapbox"><h2>Euclid Ave, north at top</h2><svg id="map" viewBox="0 0 260 1000" role="img" aria-label="Schematic map of Euclid Avenue with photo stops"></svg>
-  <div class="legend">Schematic, not to scale. Markers left of the median are the west side, right is the east side, on the median are median features. Blue P is where I parked.</div></aside>
+  <aside class="mapbox"><div class="maphead"><h2>Euclid Ave, north at top</h2><button class="mapbtn" id="mapmode" type="button" aria-pressed="false">Street map</button></div><svg id="map" viewBox="0 0 260 1000" role="img" aria-label="Schematic map of Euclid Avenue with photo stops"></svg>
+  <div id="lmap" hidden></div>
+  <div class="legend" id="legend">Schematic, not to scale. Markers left of the median are the west side, right is the east side, on the median are median features. Blue P is where I parked.</div></aside>
   <main id="list"></main>
 </div>
 <footer>Photos by Travis Smith, Nov 2026. Order and stop placement read from street signs and storefronts in the photos (the uploads had no GPS data), so mid-block positions are approximate. Layout by Claude.</footer>
@@ -138,6 +149,45 @@ document.getElementById('next').onclick=()=>open(cur+1);
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
 lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('img'))close();});
 document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')open(cur+1);if(e.key==='ArrowLeft')open(cur-1);});
+// Real street map, loaded the first time it is switched on
+const LAT={g:34.070649,f:34.069444,e:34.068223,d:34.067014,c:34.065803,b:34.064591,holt:34.063365,transit:34.06266};
+const knots=[[40,LAT.g],[150,LAT.f],[260,LAT.e],[370,LAT.d],[525,LAT.c],[650,LAT.b],[820,LAT.holt],[940,LAT.transit]];
+const LON={w:-117.65136,x:-117.65136,m:-117.65101,e:-117.65066};
+function latFor(y){for(let k=1;k<knots.length;k++){const[a,la]=knots[k-1],[b,lb2]=knots[k];if(y<=b||k===knots.length-1){const t=(y-a)/(b-a);return la+t*(lb2-la);}}}
+let lmap=null,lmarkers=[],real=false;
+const legend=document.getElementById('legend'),legendSchem=legend.innerHTML;
+const lmapEl=document.getElementById('lmap'),modeBtn=document.getElementById('mapmode');
+function loadLeaflet(){return new Promise((res,rej)=>{if(window.L)return res();
+  const c=document.createElement('link');c.rel='stylesheet';c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(c);
+  const j=document.createElement('script');j.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';j.onload=res;j.onerror=rej;document.head.appendChild(j);});}
+function buildMap(){
+  lmap=L.map(lmapEl,{zoomSnap:.25,scrollWheelZoom:false,attributionControl:true,dragging:!L.Browser.mobile});
+  const street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
+  street.addTo(lmap);L.control.layers({'Street':street,'Satellite':sat},null,{position:'topright'}).addTo(lmap);
+  lmap.attributionControl.setPrefix(false);
+  STOPS.forEach((s,i)=>{const m=L.marker([latFor(s.y),LON[s.side]],{title:(i+1)+'. '+s.name,keyboard:true,
+      icon:L.divIcon({className:'lmk',html:String(i+1),iconSize:null})}).addTo(lmap);
+    m.on('click',()=>jump(i));lmarkers.push(m);});
+  const s9=STOPS.find(s=>s.id==='deast');
+  L.marker([latFor(s9.y),LON.e+0.00028],{title:'Where I parked',icon:L.divIcon({className:'lpk',html:'P',iconSize:null})}).addTo(lmap);
+}
+function fitStrip(){lmap.invalidateSize();lmap.fitBounds([[LAT.g+0.0002,LON.w-0.0003],[LAT.transit-0.0002,LON.e+0.0003]],{padding:[6,6]});}
+function setMode(on){
+  if(on&&!lmap){modeBtn.disabled=true;modeBtn.textContent='Loading...';
+    loadLeaflet().then(()=>{buildMap();modeBtn.disabled=false;setMode(true);})
+      .catch(()=>{modeBtn.disabled=false;modeBtn.textContent='Street map';legend.textContent='The street map could not load. Check your connection and try again.';});return;}
+  real=on;const h=svg.getBoundingClientRect().height;
+  svg.toggleAttribute('hidden',on);lmapEl.hidden=!on;if(on&&h)lmapEl.style.height=h+'px';
+  modeBtn.textContent=on?'Schematic':'Street map';modeBtn.setAttribute('aria-pressed',on);
+  legend.innerHTML=on?'Street map, north at top. Marker positions are approximate, placed from the street signs in the photos. Blue P is where I parked. Use the corner button for satellite view.':legendSchem;
+  if(on)fitStrip();hi(cur0());}
+let lastHi=-1;function cur0(){return lastHi;}
+modeBtn.onclick=()=>setMode(!real);
+const hiSvg=hi;hi=function(i){lastHi=i;hiSvg(i);lmarkers.forEach((m,j)=>{const e=m.getElement();if(e)e.classList.toggle('on',j===i);});};
+document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();
+  if(real&&lmarkers[si]){lmapEl.scrollIntoView({block:'nearest'});lmap.panTo(lmarkers[si].getLatLng());hi(si);lmarkers[si].getElement()?.focus({preventScroll:true});return;}
+  const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
 let tx=null;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
 lb.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)open(cur+(dx<0?1:-1));tx=null;});
 </script>
