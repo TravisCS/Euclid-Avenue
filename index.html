@@ -53,6 +53,11 @@ svg text{font-family:var(--serif);fill:var(--fg)}
 .lb .cap small{display:block;color:#aaa}
 .lb button{font-family:var(--serif);font-size:1rem;background:#2b2f2d;color:#fff;border:1px solid #555;border-radius:4px;padding:6px 14px;cursor:pointer}
 .lb button.x{font-size:1.5rem;line-height:1;width:44px;height:44px;padding:0;border-radius:22px;flex:none}
+.lb .tbtns{display:flex;align-items:center;gap:8px;flex:none}
+.lb .dlbtn{font-family:var(--serif);font-size:1rem;background:#2b2f2d;color:#fff;border:1px solid #555;border-radius:22px;padding:0 14px;height:44px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.lb .dlbtn:focus-visible{outline:2px solid #fff}
+.lb .img{touch-action:none;overflow:hidden}
+.lb img{transform-origin:center center;will-change:transform;cursor:zoom-in;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .lb button:focus-visible{outline:2px solid #fff}
 .nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
 /* Map toggle: schematic (default) or a real street map in the same strip */
@@ -107,7 +112,7 @@ footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
 <footer>Photos by Travis Smith, Nov 2026. Order and stop placement read from street signs and storefronts in the photos (the uploads had no GPS data), so mid-block positions are approximate. Layout by Claude.</footer>
 
 <div class="lb" id="lb" hidden>
-  <div class="top"><span id="lbstop"></span><button id="close" class="x" type="button" aria-label="Close" title="Close">&#10005;</button></div>
+  <div class="top"><span id="lbstop"></span><span class="tbtns"><a id="dl" class="dlbtn" href="#" download>&#8595; Download</a><button id="close" class="x" type="button" aria-label="Close" title="Close">&#10005;</button></span></div>
   <div class="img"><img id="lbimg" alt=""></div>
   <div class="cap" id="lbcap"></div>
   <div class="nav"><button id="prev" type="button">&#8592; North</button><button id="map2" type="button">Show on map</button><button id="next" type="button">South &#8594;</button></div>
@@ -161,7 +166,8 @@ function jump(i){const sec=document.getElementById('s-'+STOPS[i].id);sec.scrollI
   sec.classList.add('flash');setTimeout(()=>sec.classList.remove('flash'),1200);hi(i);}
 const lb=document.getElementById('lb'),img=document.getElementById('lbimg');let cur=0;
 function open(k){cur=(k+all.length)%all.length;const p=all[cur],s=STOPS[p.si];
-  img.src='photos/'+p.f;img.alt=p.cap;
+  resetZ();img.src='photos/'+p.f;img.alt=p.cap;
+  const dl=document.getElementById('dl');dl.href='photos/'+p.f;dl.download='Euclid-Avenue-photo-'+p.f;
   document.getElementById('lbstop').textContent=`Stop ${p.si+1}: ${s.name}`;
   document.getElementById('lbcap').innerHTML=`${p.cap}<small>Photo ${p.n}</small>`;
   lb.hidden=false;hi(p.si);if(all[cur+1]){const pre=new Image();pre.src='photos/'+all[cur+1].f;}}
@@ -170,7 +176,7 @@ document.getElementById('close').onclick=close;
 document.getElementById('prev').onclick=()=>open(cur-1);
 document.getElementById('next').onclick=()=>open(cur+1);
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
-lb.addEventListener('click',e=>{if(e.target===lb||e.target.classList.contains('img'))close();});
+lb.addEventListener('click',e=>{if(zs===1&&(e.target===lb||e.target.classList.contains('img')))close();});
 document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')open(cur+1);if(e.key==='ArrowLeft')open(cur-1);});
 // Phone layout for the schematic: crop to the road, labels sit on the cross streets
 const phoneMQ=matchMedia('(max-width:760px)');
@@ -223,8 +229,39 @@ const hiSvg=hi;hi=function(i){lastHi=i;hiSvg(i);lmarkers.forEach((m,j)=>{const e
 document.getElementById('map2').onclick=()=>{const si=all[cur].si;close();
   if(real&&lmarkers[si]){lmapEl.scrollIntoView({block:'nearest'});lmap.panTo(lmarkers[si].getLatLng());hi(si);lmarkers[si].getElement()?.focus({preventScroll:true});return;}
   const m=markers[si];m.scrollIntoView({block:'center'});hi(si);m.focus({preventScroll:true});};
-let tx=null;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
-lb.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)open(cur+(dx<0?1:-1));tx=null;});
+// Photo viewer zoom: pinch or double-tap to zoom, drag to pan; swipe changes photo only when not zoomed
+const box=document.querySelector('.lb .img');let zs=1,zx=0,zy=0;
+function applyZ(anim){img.style.transition=anim?'transform .2s':'none';img.style.transform=zs===1?'':`translate(${zx}px,${zy}px) scale(${zs})`;}
+function clampZ(){const w=img.offsetWidth,h=img.offsetHeight,bw=box.clientWidth,bh=box.clientHeight;
+  const mx=Math.max(0,(w*zs-bw)/2),my=Math.max(0,(h*zs-bh)/2);zx=Math.min(mx,Math.max(-mx,zx));zy=Math.min(my,Math.max(-my,zy));}
+function zoomAt(ns,cx,cy){const b=box.getBoundingClientRect(),ox=cx-(b.left+b.width/2),oy=cy-(b.top+b.height/2);
+  ns=Math.min(5,Math.max(1,ns));zx=ox-(ox-zx)*(ns/zs);zy=oy-(oy-zy)*(ns/zs);zs=ns;if(zs<=1.01){zs=1;zx=0;zy=0;}clampZ();}
+function resetZ(){zs=1;zx=0;zy=0;applyZ(false);}
+let g=null,lastTap=0;
+const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+box.addEventListener('touchstart',e=>{const t=e.touches;
+  if(t.length===2){g={pinch:true,d0:dist(t),s0:zs,multi:true};}
+  else if(t.length===1&&!(g&&g.pinch)){g={x0:t[0].clientX,y0:t[0].clientY,zx0:zx,zy0:zy,multi:g?g.multi:false,moved:false};}},{passive:false});
+box.addEventListener('touchmove',e=>{if(!g)return;e.preventDefault();const t=e.touches;
+  if(t.length===2){if(!g.pinch)g={pinch:true,d0:dist(t),s0:zs,multi:true};
+    const mx=(t[0].clientX+t[1].clientX)/2,my=(t[0].clientY+t[1].clientY)/2;zoomAt(g.s0*dist(t)/g.d0,mx,my);applyZ(false);}
+  else if(t.length===1&&!g.pinch){const dx=t[0].clientX-g.x0,dy=t[0].clientY-g.y0;if(Math.abs(dx)+Math.abs(dy)>8)g.moved=true;
+    if(zs>1){zx=g.zx0+dx;zy=g.zy0+dy;clampZ();applyZ(false);}}},{passive:false});
+box.addEventListener('touchend',e=>{if(!g)return;
+  if(e.touches.length>0){if(g.pinch&&e.touches.length===1)g={x0:e.touches[0].clientX,y0:e.touches[0].clientY,zx0:zx,zy0:zy,multi:true,moved:true};return;}
+  const c=e.changedTouches[0];
+  if(!g.pinch&&!g.multi){const dx=c.clientX-g.x0,dy=c.clientY-g.y0;
+    if(zs===1&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){g=null;open(cur+(dx<0?1:-1));return;}
+    if(!g.moved){const now=Date.now();
+      if(now-lastTap<300){lastTap=0;if(zs>1){zs=1;zx=0;zy=0;}else zoomAt(2.5,c.clientX,c.clientY);applyZ(true);e.preventDefault();}
+      else lastTap=now;}}
+  g=null;});
+// Desktop: double-click toggles zoom, drag to pan, wheel zooms
+img.addEventListener('dblclick',e=>{if(zs>1){zs=1;zx=0;zy=0;}else zoomAt(2.5,e.clientX,e.clientY);applyZ(true);});
+box.addEventListener('wheel',e=>{if(lb.hidden)return;e.preventDefault();zoomAt(zs*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY);applyZ(false);},{passive:false});
+let md=null;img.addEventListener('mousedown',e=>{if(zs>1){e.preventDefault();md={x:e.clientX,y:e.clientY,zx0:zx,zy0:zy};}});
+addEventListener('mousemove',e=>{if(!md)return;zx=md.zx0+e.clientX-md.x;zy=md.zy0+e.clientY-md.y;clampZ();applyZ(false);});
+addEventListener('mouseup',()=>{md=null;});
 </script>
 
 </body></html>
