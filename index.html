@@ -68,7 +68,7 @@ footer{max-width:1180px;margin:24px auto 0;color:var(--muted);font-size:.85rem}
 </header>
 <div class="wrap">
   <aside class="mapbox"><h2>Euclid Ave, north at top</h2><svg id="map" viewBox="0 0 260 1000" role="img" aria-label="Schematic map of Euclid Avenue with photo stops"></svg>
-  <div class="legend">Schematic, not to scale. Markers left of the median are the west side, right is the east side, on the median are median features.</div></aside>
+  <div class="legend">Schematic, not to scale. Markers left of the median are the west side, right is the east side, on the median are median features. Blue P is where I parked.</div></aside>
   <main id="list"></main>
 </div>
 <footer>Photos by Travis Smith, Nov 2026. Order and stop placement read from street signs and storefronts in the photos (the uploads had no GPS data), so mid-block positions are approximate. Layout by Claude.</footer>
@@ -105,6 +105,12 @@ STOPS.forEach((s,i)=>{
   const go=()=>jump(i);g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
   markers.push(g);
 });
+// Blue P sign beside stop 9: where the walk started from the car
+{const s9=STOPS.findIndex(s=>s.id==='deast'),y=STOPS[s9].y,x=xs[STOPS[s9].side]+16;
+ const pg=el('g',{'aria-label':'Parking: where I parked'});
+ el('rect',{x:x,y:y-9,width:18,height:18,rx:3,fill:'#1f5fbf',stroke:'#fff','stroke-width':1.5},pg);
+ const pt=el('text',{x:x+9,y:y+5,'text-anchor':'middle','font-size':13,'font-weight':700,style:'fill:#fff;font-family:-apple-system,Helvetica,Arial,sans-serif'},pg);pt.textContent='P';
+ el('title',{},pg).textContent='Where I parked';}
 const sideName={w:'West side',e:'East side',m:'Median',x:'Intersection'};
 const list=document.getElementById('list');
 STOPS.forEach((s,i)=>{
